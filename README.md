@@ -1,6 +1,6 @@
 # 🚀 Sistema de Manipulação de PDFs
 
-Um sistema completo e otimizado para manipulação de arquivos PDF com interface web.
+Um sistema para manipulação de arquivos PDF com interface web.
 
 ## ✨ Funcionalidades Principais
 
@@ -276,48 +276,4 @@ pip install -r requirements.txt --force-reinstall
 - **Arquivos médios**: 2-5 segundos
 - **Arquivos grandes**: 10-30 segundos (dependendo do tamanho)
 
-## 🚀 Próximas Funcionalidades
-
-- [ ] **Assinatura com certificado digital**
-- [ ] **OCR para PDFs escaneados**
-- [ ] **Compressão de PDFs**
-- [ ] **Proteção por senha**
-- [ ] **API REST completa**
-
-## 🤝 Contribuição
-
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
-
-## 📄 Licença
-
-Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
-
-## 📞 Suporte
-
-Para suporte ou dúvidas:
-- **Issues**: Abra uma issue no repositório
-- **Documentação**: Consulte este README
-- **Logs**: Verifique o console do navegador e terminal
-
-## 🎉 Agradecimentos
-
-- **Flask Framework** - Base sólida
-- **PyMuPDF** - Manipulação avançada de PDFs
-- **PDF-lib** - Precisão no frontend
-- **Bootstrap** - Interface moderna
-- **Font Awesome** - Ícones elegantes
-- **Comunidade Python** - Suporte contínuo
-
----
-
-## 🏆 **Sistema PDF Otimizado**
-
-**Desenvolvido com ❤️ para máxima eficiência e precisão**
-
-**Versão**: 2.0 Otimizada  
-**Última atualização**: Outubro 2025  
 
