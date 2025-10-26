@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assinatura Digital</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            margin: 20px auto;
+            padding: 30px;
+            max-width: 1400px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+        
+        .upload-area {
+            border: 3px dashed #3498db;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover {
+            border-color: #2980b9;
+            background: #e3f2fd;
+            transform: translateY(-2px);
+        }
+        
+        .upload-area.dragover {
+            border-color: #27ae60;
+            background: #e8f5e8;
+        }
+        
+        .pdf-viewer {
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin: 20px 0;
+            min-height: 600px;
+            position: relative;
+        }
+        
+        .pdf-page {
+            width: 100%;
+            height: auto;
+            cursor: crosshair;
+            border: 2px solid #ecf0f1;
+            margin: 10px 0;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            position: relative;
+            user-select: none;
+        }
+        
+        .pdf-page:hover {
+            border-color: #3498db;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+            transform: scale(1.02);
+        }
+        
+        .pdf-page-container {
+            position: relative;
+            display: inline-block;
+            margin: 20px auto;
+            text-align: center;
+        }
+        
+        .signature-marker {
+            position: absolute;
+            background: rgba(231, 76, 60, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            pointer-events: auto;
+            z-index: 1000;
+            border: 3px solid #e74c3c;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.6);
+            animation: pulse 2s infinite;
+            min-width: 120px;
+            text-align: center;
+            cursor: move;
+            user-select: none;
+            resize: both;
+            overflow: hidden;
+        }
+        
+        .resize-handle {
+            position: absolute;
+            background: #e74c3c;
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+            cursor: nw-resize;
+            z-index: 1001;
+        }
+        
+        .resize-handle.se {
+            bottom: -6px;
+            right: -6px;
+            cursor: se-resize;
+        }
+        
+        .resize-handle.sw {
+            bottom: -6px;
+            left: -6px;
+            cursor: sw-resize;
+        }
+        
+        .resize-handle.ne {
+            top: -6px;
+            right: -6px;
+            cursor: ne-resize;
+        }
+        
+        .resize-handle.nw {
+            top: -6px;
+            left: -6px;
+            cursor: nw-resize;
+        }
+        
+        .signature-marker:hover {
+            background: rgba(231, 76, 60, 1);
+            transform: scale(1.05);
+            animation: none;
+        }
+        
+        .signature-marker.dragging {
+            animation: none;
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.8);
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .signature-marker::before {
+            content: "📍";
+            margin-right: 5px;
+        }
+        
+        .signature-form {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        
+        .btn-custom {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+            color: white;
+        }
+        
+        .btn-success-custom {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+        }
+        
+        .btn-success-custom:hover {
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+        }
+        
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #ecf0f1;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .alert-custom {
+            border-radius: 10px;
+            border: none;
+            padding: 15px 20px;
+            margin: 15px 0;
+        }
+        
+        .page-navigation {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        
+        .page-info {
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+        
+        .coordinates-display {
+            background: #34495e;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="main-container">
+            <!-- Header -->
+            <div class="header">
+                <h1><i class="fas fa-file-signature"></i> Assinatura Digital</h1>
+                <p>Carregue um PDF, visualize e adicione sua assinatura digital.</p>
+                <a href="/" class="btn btn-secondary-custom">
+                    <i class="fas fa-arrow-left"></i> Voltar ao Menu Principal
+                </a>
+            </div>
+            
+            <!-- Upload Area -->
+            <div class="upload-area" id="uploadArea">
+                <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                <h4>Arraste e solte seu PDF aqui</h4>
+                <p>ou clique para selecionar</p>
+                <input type="file" id="fileInput" accept=".pdf" style="display: none;">
+                <button class="btn btn-custom" onclick="document.getElementById('fileInput').click()">
+                    <i class="fas fa-folder-open"></i> Selecionar PDF
+                </button>
+            </div>
+            
+            <!-- Loading -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Processando PDF...</p>
+            </div>
+            
+            <!-- PDF Viewer -->
+            <div class="pdf-viewer" id="pdfViewer" style="display: none;">
+                <div class="page-navigation">
+                    <div class="page-info">
+                        <i class="fas fa-file-pdf"></i> 
+                        <span id="pdfTitle">PDF Carregado</span>
+                    </div>
+                </div>
+                <div id="pdfPages"></div>
+                <div class="coordinates-display" id="coordinatesDisplay" style="display: none;">
+                    <strong>Coordenadas:</strong> X: <span id="coordX">0</span>, Y: <span id="coordY">0</span> | 
+                    <strong>Página:</strong> <span id="currentPage">1</span>
+                </div>
+            </div>
+            
+            <!-- Signature Form -->
+            <div class="signature-form" id="signatureForm" style="display: none;">
+                <h4><i class="fas fa-signature"></i> Dados da Assinatura</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="form-label">Nome do Signatário *</label>
+                        <input type="text" class="form-control" id="signerName" placeholder="Digite o nome completo">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Cargo/Função</label>
+                        <input type="text" class="form-control" id="signerPosition" placeholder="Ex: Diretor, Gerente, etc.">
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-success-custom" id="signPdfBtn" disabled>
+                        <i class="fas fa-pen-fancy"></i> Assinar PDF
+                    </button>
+                    <button class="btn btn-secondary" id="clearSignatureBtn">
+                        <i class="fas fa-eraser"></i> Limpar Posição
+                    </button>
+                </div>
+                
+                <!-- Controles de Tamanho da Assinatura -->
+                <div class="mt-3" id="signatureSizeControls" style="display: none;">
+                    <h6><i class="fas fa-expand-arrows-alt"></i> Ajustar Tamanho da Assinatura</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Tamanho da Fonte</label>
+                            <div class="input-group">
+                                <button class="btn btn-outline-secondary" id="decreaseSizeBtn" type="button">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <input type="number" class="form-control text-center" id="fontSizeInput" value="16" min="8" max="32" readonly>
+                                <button class="btn btn-outline-secondary" id="increaseSizeBtn" type="button">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Tamanho do Marcador</label>
+                            <div class="input-group">
+                                <button class="btn btn-outline-secondary" id="decreaseMarkerBtn" type="button">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <input type="number" class="form-control text-center" id="markerSizeInput" value="120" min="80" max="200" readonly>
+                                <button class="btn btn-outline-secondary" id="increaseMarkerBtn" type="button">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            <i class="fas fa-mouse"></i> Use a roda do mouse sobre o PDF para ajustar o tamanho<br>
+                            <i class="fas fa-expand-arrows-alt"></i> Arraste os cantos do marcador para redimensionar<br>
+                            <i class="fas fa-hand-paper"></i> Arraste o marcador para mover a posição
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Alerts -->
+            <div id="alertContainer"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script>
+        let currentPdfData = null;
+        let signaturePosition = null;
+        let currentPageNum = 1;
+        let signatureFontSize = 16;
+        let markerSize = 120;
+        
+        // Upload handling
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const loading = document.getElementById('loading');
+        
+        // API de Assinaturas Eletrônicas
+        let availableSignatures = [];
+        let autoSignatureEnabled = true;
+        
+        // Carregar assinaturas disponíveis
+        async function loadAvailableSignatures() {
+            try {
+                const response = await fetch('/api/signatures');
+                const data = await response.json();
+                if (data.success) {
+                    availableSignatures = data.signatures;
+                    console.log('Assinaturas carregadas:', availableSignatures);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar assinaturas:', error);
+            }
+        }
+        
+        // Carregar assinatura automaticamente no PDF
+        async function autoLoadSignature() {
+            if (!autoSignatureEnabled || availableSignatures.length === 0) return;
+            
+            try {
+                const response = await fetch('/api/signatures/auto-load', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        signer_name: 'Assinatura Digital',
+                        signer_position: 'Assinado Digitalmente',
+                        page_num: 1,
+                        marker_x: signaturePosition ? signaturePosition.x : 0,
+                        marker_y: signaturePosition ? signaturePosition.y : 0
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    console.log('Assinatura carregada automaticamente:', data.signature_info);
+                    showAlert('✅ Assinatura carregada automaticamente no documento!', 'success');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar assinatura automaticamente:', error);
+            }
+        }
+        const pdfViewer = document.getElementById('pdfViewer');
+        const signatureForm = document.getElementById('signatureForm');
+        
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileUpload(files[0]);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileUpload(e.target.files[0]);
+            }
+        });
+        
+        function handleFileUpload(file) {
+            if (!file.type.includes('pdf')) {
+                showAlert('Por favor, selecione um arquivo PDF válido.', 'danger');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            loading.style.display = 'block';
+            uploadArea.style.display = 'none';
+            
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                
+                if (data.success) {
+                    currentPdfData = data;
+                    displayPdf(data);
+                    showAlert('PDF carregado com sucesso!', 'success');
+                    
+                    // Carregar assinaturas automaticamente
+                    loadAvailableSignatures().then(() => {
+                        // Só carregar assinatura se houver uma marcação
+                        if (signaturePosition) {
+                            autoLoadSignature();
+                        }
+                    });
+                } else {
+                    showAlert(data.message, 'danger');
+                    uploadArea.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                showAlert('Erro ao carregar PDF: ' + error.message, 'danger');
+                uploadArea.style.display = 'block';
+            });
+        }
+        
+        function displayPdf(data) {
+            const pdfPages = document.getElementById('pdfPages');
+            pdfPages.innerHTML = '';
+            
+            document.getElementById('pdfTitle').textContent = data.filename;
+            
+            data.images.forEach((image, index) => {
+                const pageDiv = document.createElement('div');
+                pageDiv.className = 'pdf-page-container';
+                pageDiv.innerHTML = `
+                    <div class="page-navigation">
+                        <strong>Página ${image.page_num}</strong>
+                    </div>
+                    <img src="${image.image}" 
+                         class="pdf-page" 
+                         data-page="${image.page_num}"
+                         data-width="${image.width}"
+                         data-height="${image.height}"
+                         onclick="handlePageClick(event, ${image.page_num})"
+                         style="max-width: 100%; height: auto;">
+                `;
+                pdfPages.appendChild(pageDiv);
+            });
+            
+            pdfViewer.style.display = 'block';
+            signatureForm.style.display = 'block';
+        }
+        
+        function handlePageClick(event, pageNum) {
+            const rect = event.target.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            
+            // Remover marcador anterior
+            document.querySelectorAll('.signature-marker').forEach(marker => marker.remove());
+            
+            // Criar novo marcador mais visível
+            const marker = document.createElement('div');
+            marker.className = 'signature-marker';
+            marker.innerHTML = 'ASSINATURA';
+            marker.style.left = (x - 60) + 'px';  // Centralizar o marcador
+            marker.style.top = (y - 15) + 'px';
+            marker.style.minWidth = markerSize + 'px';
+            marker.style.fontSize = (signatureFontSize * 0.8) + 'px';
+            
+            // Adicionar handles de redimensionamento
+            addResizeHandles(marker);
+            
+            // Adicionar eventos de arrastar
+            addDragEvents(marker, event.target);
+            
+            event.target.parentNode.appendChild(marker);
+            
+            // Salvar posição com coordenadas da imagem original
+            const imgWidth = event.target.naturalWidth || event.target.width;
+            const imgHeight = event.target.naturalHeight || event.target.height;
+            const displayWidth = event.target.offsetWidth;
+            const displayHeight = event.target.offsetHeight;
+            
+            // Calcular coordenadas proporcionais da imagem original
+            const scaleX = imgWidth / displayWidth;
+            const scaleY = imgHeight / displayHeight;
+            
+            const originalX = x * scaleX;
+            const originalY = y * scaleY;
+            
+            signaturePosition = {
+                x: originalX,
+                y: originalY,
+                page: pageNum,
+                displayX: x,
+                displayY: y
+            };
+            
+            currentPageNum = pageNum;
+            
+            // Atualizar coordenadas
+            document.getElementById('coordX').textContent = Math.round(originalX);
+            document.getElementById('coordY').textContent = Math.round(originalY);
+            document.getElementById('currentPage').textContent = pageNum;
+            document.getElementById('coordinatesDisplay').style.display = 'block';
+            
+            // Habilitar botão de assinar e controles de tamanho
+            document.getElementById('signPdfBtn').disabled = false;
+            document.getElementById('signatureSizeControls').style.display = 'block';
+            
+            // Carregar assinatura automaticamente na marcação
+            if (availableSignatures.length > 0) {
+                autoLoadSignature();
+            }
+            
+            showAlert(`✅ Posição da assinatura definida na página ${pageNum}\nCoordenadas: X=${Math.round(originalX)}, Y=${Math.round(originalY)}`, 'success');
+        }
+        
+        
+        function addDragEvents(marker, imgElement) {
+            let isDragging = false;
+            let startX, startY, startLeft, startTop;
+            
+            marker.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                marker.classList.add('dragging');
+                
+                startX = e.clientX;
+                startY = e.clientY;
+                startLeft = parseInt(marker.style.left);
+                startTop = parseInt(marker.style.top);
+                
+                e.preventDefault();
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const deltaX = e.clientX - startX;
+                const deltaY = e.clientY - startY;
+                
+                const newLeft = startLeft + deltaX;
+                const newTop = startTop + deltaY;
+                
+                // Limitar movimento dentro da imagem
+                const imgRect = imgElement.getBoundingClientRect();
+                const markerWidth = marker.offsetWidth;
+                const markerHeight = marker.offsetHeight;
+                
+                const minLeft = 0;
+                const maxLeft = imgRect.width - markerWidth;
+                const minTop = 0;
+                const maxTop = imgRect.height - markerHeight;
+                
+                marker.style.left = Math.max(minLeft, Math.min(maxLeft, newLeft)) + 'px';
+                marker.style.top = Math.max(minTop, Math.min(maxTop, newTop)) + 'px';
+            });
+            
+            document.addEventListener('mouseup', (e) => {
+                if (!isDragging) return;
+                
+                isDragging = false;
+                marker.classList.remove('dragging');
+                
+                // Atualizar coordenadas
+                const rect = imgElement.getBoundingClientRect();
+                const markerRect = marker.getBoundingClientRect();
+                
+                const markerWidth = marker.offsetWidth;
+                const markerHeight = marker.offsetHeight;
+                
+                const x = markerRect.left - rect.left + (markerWidth / 2);
+                const y = markerRect.top - rect.top + (markerHeight / 2);
+                
+                // Calcular coordenadas da imagem original
+                const imgWidth = imgElement.naturalWidth || imgElement.width;
+                const imgHeight = imgElement.naturalHeight || imgElement.height;
+                const displayWidth = imgElement.offsetWidth;
+                const displayHeight = imgElement.offsetHeight;
+                
+                const scaleX = imgWidth / displayWidth;
+                const scaleY = imgHeight / displayHeight;
+                
+                const originalX = x * scaleX;
+                const originalY = y * scaleY;
+                
+                // Atualizar posição da assinatura
+                if (signaturePosition) {
+                    signaturePosition.x = originalX;
+                    signaturePosition.y = originalY;
+                    signaturePosition.displayX = x;
+                    signaturePosition.displayY = y;
+                    
+                    // Atualizar display
+                    document.getElementById('coordX').textContent = Math.round(originalX);
+                    document.getElementById('coordY').textContent = Math.round(originalY);
+                    
+                    showAlert(`✅ Assinatura movida!\nCoordenadas: X=${Math.round(originalX)}, Y=${Math.round(originalY)}`, 'success');
+                }
+            });
+        }
+        
+        // Signature handling com PDF-lib
+        document.getElementById('signPdfBtn').addEventListener('click', async () => {
+            const signerName = document.getElementById('signerName').value.trim();
+            const signerPosition = document.getElementById('signerPosition').value.trim();
+            
+            if (!signerName) {
+                showAlert('Por favor, digite o nome do signatário.', 'warning');
+                return;
+            }
+            
+            if (!signaturePosition) {
+                showAlert('Por favor, clique em uma posição no PDF para definir onde a assinatura será colocada.', 'warning');
+                return;
+            }
+            
+            loading.style.display = 'block';
+            
+            try {
+                // Obter dados do PDF do backend
+                const response = await fetch('/add_signature_frontend', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        signer_name: signerName,
+                        signer_position: signerPosition,
+                        x: signaturePosition.x,
+                        y: signaturePosition.y,
+                        page_num: signaturePosition.page
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.message);
+                }
+                
+                // Usar PDF-lib para assinatura precisa
+                const { PDFDocument, rgb } = PDFLib;
+                
+                // Carregar PDF
+                const pdfBytes = Uint8Array.from(atob(data.pdf_data), c => c.charCodeAt(0));
+                const pdfDoc = await PDFDocument.load(pdfBytes);
+                const pages = pdfDoc.getPages();
+                const page = pages[data.coordinates.page];
+                
+                // Obter dimensões da página
+                const { width, height } = page.getSize();
+
+                // API DE POSICIONAMENTO PRECISO: Usar coordenadas da API backend
+                // As coordenadas já foram calculadas pelo backend com precisão
+                const finalX = data.coordinates.x;
+                const finalY = data.coordinates.y;
+                const signatureWidth = data.coordinates.signature_width;
+                const signatureHeight = data.coordinates.signature_height;
+
+                console.log(`DEBUG - API DE POSICIONAMENTO PRECISO:`);
+                console.log(`  Dimensões página: ${width} x ${height}`);
+                console.log(`  Coordenadas da API: X=${finalX}, Y=${finalY}`);
+                console.log(`  Largura assinatura: ${signatureWidth}, Altura: ${signatureHeight}`);
+                console.log(`  Página: ${data.coordinates.page + 1}`);
+                
+                // Adicionar texto da assinatura com tamanho configurado
+                page.drawText(signerName, {
+                    x: finalX,
+                    y: finalY - 10,
+                    size: signatureFontSize,
+                    color: rgb(0, 0, 0),
+                });
+                
+                // Adicionar cargo se fornecido
+                if (signerPosition) {
+                    page.drawText(signerPosition, {
+                        x: finalX,
+                        y: finalY - 25,
+                        size: signatureFontSize - 2,
+                        color: rgb(0, 0, 0),
+                    });
+                }
+                
+                // Adicionar data e hora
+                const now = new Date();
+                const dateTime = now.toLocaleString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                page.drawText(`Assinado em: ${dateTime}`, {
+                    x: finalX,
+                    y: finalY - 40,
+                    size: signatureFontSize - 4,
+                    color: rgb(0.3, 0.3, 0.3),
+                });
+                
+                // Salvar PDF
+                const pdfBytesModified = await pdfDoc.save();
+                
+                // Criar blob e download
+                const blob = new Blob([pdfBytesModified], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                
+                const downloadLink = document.createElement('a');
+                downloadLink.href = url;
+                downloadLink.download = 'PDF_Assinado.pdf';
+                downloadLink.click();
+                
+                // Limpar URL
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+                
+                loading.style.display = 'none';
+                showAlert('✅ PDF assinado com sucesso! Assinatura centralizada no documento.', 'success');
+                
+                // Limpar formulário
+                document.getElementById('signerName').value = '';
+                document.getElementById('signerPosition').value = '';
+                document.getElementById('signPdfBtn').disabled = true;
+                document.querySelectorAll('.signature-marker').forEach(marker => marker.remove());
+                document.getElementById('coordinatesDisplay').style.display = 'none';
+                signaturePosition = null;
+                
+            } catch (error) {
+                loading.style.display = 'none';
+                showAlert('Erro ao assinar PDF: ' + error.message, 'danger');
+                console.error('Erro:', error);
+            }
+        });
+        
+        document.getElementById('clearSignatureBtn').addEventListener('click', () => {
+            document.querySelectorAll('.signature-marker').forEach(marker => marker.remove());
+            document.getElementById('coordinatesDisplay').style.display = 'none';
+            document.getElementById('signPdfBtn').disabled = true;
+            document.getElementById('signatureSizeControls').style.display = 'none';
+            signaturePosition = null;
+            showAlert('Posição da assinatura limpa.', 'info');
+        });
+        
+        // Controles de tamanho da assinatura
+        document.getElementById('increaseSizeBtn').addEventListener('click', () => {
+            if (signatureFontSize < 32) {
+                signatureFontSize += 2;
+                document.getElementById('fontSizeInput').value = signatureFontSize;
+                updateSignatureMarker();
+                showAlert(`Tamanho da fonte aumentado para ${signatureFontSize}px`, 'info');
+            }
+        });
+        
+        document.getElementById('decreaseSizeBtn').addEventListener('click', () => {
+            if (signatureFontSize > 8) {
+                signatureFontSize -= 2;
+                document.getElementById('fontSizeInput').value = signatureFontSize;
+                updateSignatureMarker();
+                showAlert(`Tamanho da fonte reduzido para ${signatureFontSize}px`, 'info');
+            }
+        });
+        
+        document.getElementById('increaseMarkerBtn').addEventListener('click', () => {
+            if (markerSize < 200) {
+                markerSize += 20;
+                document.getElementById('markerSizeInput').value = markerSize;
+                updateSignatureMarker();
+                showAlert(`Tamanho do marcador aumentado para ${markerSize}px`, 'info');
+            }
+        });
+        
+        document.getElementById('decreaseMarkerBtn').addEventListener('click', () => {
+            if (markerSize > 80) {
+                markerSize -= 20;
+                document.getElementById('markerSizeInput').value = markerSize;
+                updateSignatureMarker();
+                showAlert(`Tamanho do marcador reduzido para ${markerSize}px`, 'info');
+            }
+        });
+        
+        // Zoom com scroll do mouse
+        document.addEventListener('wheel', (e) => {
+            if (signaturePosition && e.ctrlKey) {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? -2 : 2;
+                const newSize = Math.max(8, Math.min(32, signatureFontSize + delta));
+                if (newSize !== signatureFontSize) {
+                    signatureFontSize = newSize;
+                    document.getElementById('fontSizeInput').value = signatureFontSize;
+                    updateSignatureMarker();
+                }
+            }
+        });
+        
+        function updateSignatureMarker() {
+            if (!signaturePosition) return;
+            
+            // Remover marcador anterior
+            document.querySelectorAll('.signature-marker').forEach(marker => marker.remove());
+            
+            // Encontrar a imagem do PDF
+            const pdfImages = document.querySelectorAll('.pdf-page');
+            let targetImage = null;
+            for (let img of pdfImages) {
+                if (parseInt(img.dataset.page) === signaturePosition.page) {
+                    targetImage = img;
+                    break;
+                }
+            }
+            
+            if (!targetImage) return;
+            
+            // Criar novo marcador com tamanho ajustado
+            const marker = document.createElement('div');
+            marker.className = 'signature-marker';
+            marker.innerHTML = 'ASSINATURA';
+            marker.style.left = (signaturePosition.displayX - markerSize/2) + 'px';
+            marker.style.top = (signaturePosition.displayY - 15) + 'px';
+            marker.style.minWidth = markerSize + 'px';
+            marker.style.fontSize = (signatureFontSize * 0.8) + 'px';
+            
+            // Adicionar handles de redimensionamento
+            addResizeHandles(marker);
+            
+            // Adicionar eventos de arrastar
+            addDragEvents(marker, targetImage);
+            
+            targetImage.parentNode.appendChild(marker);
+        }
+        
+        function addResizeHandles(marker) {
+            // Handle canto inferior direito
+            const seHandle = document.createElement('div');
+            seHandle.className = 'resize-handle se';
+            marker.appendChild(seHandle);
+            
+            // Handle canto inferior esquerdo
+            const swHandle = document.createElement('div');
+            swHandle.className = 'resize-handle sw';
+            marker.appendChild(swHandle);
+            
+            // Handle canto superior direito
+            const neHandle = document.createElement('div');
+            neHandle.className = 'resize-handle ne';
+            marker.appendChild(neHandle);
+            
+            // Handle canto superior esquerdo
+            const nwHandle = document.createElement('div');
+            nwHandle.className = 'resize-handle nw';
+            marker.appendChild(nwHandle);
+            
+            // Eventos de redimensionamento
+            let isResizing = false;
+            let startX, startY, startWidth, startHeight, startLeft, startTop;
+            
+            function startResize(e, handle) {
+                isResizing = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                startWidth = marker.offsetWidth;
+                startHeight = marker.offsetHeight;
+                startLeft = parseInt(marker.style.left);
+                startTop = parseInt(marker.style.top);
+                
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            function doResize(e) {
+                if (!isResizing) return;
+                
+                const deltaX = e.clientX - startX;
+                const deltaY = e.clientY - startY;
+                
+                let newWidth = startWidth;
+                let newHeight = startHeight;
+                let newLeft = startLeft;
+                let newTop = startTop;
+                
+                // Determinar direção do redimensionamento baseado no handle
+                const handle = e.target;
+                if (handle.classList.contains('se')) {
+                    newWidth = Math.max(80, startWidth + deltaX);
+                    newHeight = Math.max(30, startHeight + deltaY);
+                } else if (handle.classList.contains('sw')) {
+                    newWidth = Math.max(80, startWidth - deltaX);
+                    newHeight = Math.max(30, startHeight + deltaY);
+                    newLeft = startLeft + deltaX;
+                } else if (handle.classList.contains('ne')) {
+                    newWidth = Math.max(80, startWidth + deltaX);
+                    newHeight = Math.max(30, startHeight - deltaY);
+                    newTop = startTop + deltaY;
+                } else if (handle.classList.contains('nw')) {
+                    newWidth = Math.max(80, startWidth - deltaX);
+                    newHeight = Math.max(30, startHeight - deltaY);
+                    newLeft = startLeft + deltaX;
+                    newTop = startTop + deltaY;
+                }
+                
+                marker.style.width = newWidth + 'px';
+                marker.style.height = newHeight + 'px';
+                marker.style.left = newLeft + 'px';
+                marker.style.top = newTop + 'px';
+                
+                // Atualizar tamanho do marcador
+                markerSize = newWidth;
+                document.getElementById('markerSizeInput').value = markerSize;
+            }
+            
+            function stopResize() {
+                isResizing = false;
+            }
+            
+            // Adicionar eventos aos handles
+            [seHandle, swHandle, neHandle, nwHandle].forEach(handle => {
+                handle.addEventListener('mousedown', (e) => startResize(e, handle));
+            });
+            
+            document.addEventListener('mousemove', doResize);
+            document.addEventListener('mouseup', stopResize);
+        }
+        
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-custom alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            alertContainer.appendChild(alertDiv);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

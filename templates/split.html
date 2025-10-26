@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dividir PDF</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            margin: 20px auto;
+            padding: 30px;
+            max-width: 1000px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .upload-area {
+            border: 3px dashed #f39c12;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 30px;
+        }
+        
+        .upload-area:hover {
+            border-color: #e67e22;
+            background: #fff3cd;
+        }
+        
+        .upload-area.dragover {
+            border-color: #e67e22;
+            background: #fff3cd;
+            transform: scale(1.02);
+        }
+        
+        .btn-custom {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
+            color: white;
+        }
+        
+        .btn-secondary-custom {
+            background: linear-gradient(45deg, #6c757d, #495057);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+            color: white;
+        }
+        
+        .split-options {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .page-preview {
+            max-width: 200px;
+            margin: 10px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .page-preview:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .page-preview.selected {
+            border: 3px solid #dc3545;
+            transform: scale(1.05);
+        }
+        
+        .page-preview .page-number {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .page-preview .remove-icon {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .page-preview:hover .remove-icon {
+            opacity: 1;
+        }
+        
+        .page-controls {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner-border {
+            color: #f39c12;
+        }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #f39c12;
+            box-shadow: 0 0 0 0.2rem rgba(243, 156, 18, 0.25);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="main-container">
+            <!-- Header -->
+            <div class="header">
+                <h1><i class="fas fa-cut"></i> Dividir PDF</h1>
+                <p>Clique nas páginas que deseja excluir e divida seu PDF</p>
+                <a href="/" class="btn btn-secondary-custom">
+                    <i class="fas fa-arrow-left"></i> Voltar ao Menu Principal
+                </a>
+            </div>
+            
+            <!-- Upload Area -->
+            <div class="upload-area" id="uploadArea">
+                <i class="fas fa-cloud-upload-alt fa-3x text-warning mb-3"></i>
+                <h4>Arraste e solte seu PDF aqui</h4>
+                <p class="text-muted">ou clique para selecionar um arquivo</p>
+                <input type="file" id="fileInput" accept=".pdf" style="display: none;">
+            </div>
+            
+            <!-- Loading -->
+            <div class="loading" id="loading">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+                <p class="mt-2">Processando PDF...</p>
+            </div>
+            
+            <!-- PDF Preview -->
+            <div id="pdfPreview" style="display: none;">
+                <!-- Controles de Páginas -->
+                <div class="page-controls">
+                    <h5><i class="fas fa-images"></i> Controle de Páginas</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong>Total de páginas:</strong> <span id="totalPages">0</span>
+                                <span class="text-muted ms-2">|</span>
+                                <span class="text-muted ms-2">Páginas selecionadas:</span> <span id="selectedPages">0</span>
+                            </p>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <button class="btn btn-sm btn-outline-primary" id="selectAllBtn">
+                                <i class="fas fa-check-square"></i> Selecionar Todas
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" id="deselectAllBtn">
+                                <i class="fas fa-square"></i> Desmarcar Todas
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i>
+                            Clique nas páginas para excluí-las da divisão. Páginas excluídas aparecem com borda vermelha.
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="split-options">
+                    <h5><i class="fas fa-cogs"></i> Dividir PDF</h5>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <p class="mb-2">
+                                <strong>Instruções:</strong> Clique nas páginas que deseja excluir da divisão. 
+                                As páginas selecionadas aparecerão com borda vermelha e serão removidas do PDF final.
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <button class="btn btn-custom" id="splitBtn" disabled>
+                                <i class="fas fa-cut"></i> Dividir PDF
+                            </button>
+                            <button class="btn btn-secondary-custom" id="clearBtn">
+                                <i class="fas fa-eraser"></i> Limpar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- PDF Pages Preview -->
+                <div id="pdfPages"></div>
+            </div>
+            
+            <!-- Alerts -->
+            <div id="alertContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const loading = document.getElementById('loading');
+        const pdfPreview = document.getElementById('pdfPreview');
+        const splitBtn = document.getElementById('splitBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        // Removidas variáveis dos métodos antigos
+        
+        let currentPdfData = null;
+        let selectedPages = new Set(); // Páginas selecionadas para exclusão
+        
+        // Drag and drop
+        
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+        
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+        
+        // Método de divisão removido - apenas seleção por clique
+        
+        function handleFile(file) {
+            if (!file.type.includes('pdf')) {
+                showAlert('Por favor, selecione um arquivo PDF válido.', 'danger');
+                return;
+            }
+            
+            loading.style.display = 'block';
+            uploadArea.style.display = 'none';
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            fetch('/split_pdf', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                
+                if (data.success) {
+                    currentPdfData = data;
+                    displayPdfPages(data.pages);
+                    pdfPreview.style.display = 'block';
+                    splitBtn.disabled = false;
+                    showAlert('PDF carregado com sucesso!', 'success');
+                } else {
+                    showAlert(data.message, 'danger');
+                    uploadArea.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                showAlert('Erro ao carregar PDF: ' + error.message, 'danger');
+                uploadArea.style.display = 'block';
+            });
+        }
+        
+        function displayPdfPages(pages) {
+            const container = document.getElementById('pdfPages');
+            container.innerHTML = '<h5><i class="fas fa-images"></i> Páginas do PDF</h5>';
+            
+            // Atualizar contadores
+            document.getElementById('totalPages').textContent = pages.length;
+            document.getElementById('selectedPages').textContent = selectedPages.size;
+            
+            pages.forEach((page, index) => {
+                const pageDiv = document.createElement('div');
+                pageDiv.className = 'd-inline-block text-center m-2';
+                pageDiv.innerHTML = `
+                    <div class="page-preview ${selectedPages.has(page.page_num) ? 'selected' : ''}" 
+                         data-page="${page.page_num}" 
+                         onclick="togglePageSelection(${page.page_num})">
+                        <img src="${page.image}" alt="Página ${page.page_num}" style="width: 100%; height: auto; border-radius: 5px;">
+                        <div class="page-number">${page.page_num}</div>
+                        <div class="remove-icon">
+                            <i class="fas fa-times"></i>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(pageDiv);
+            });
+        }
+        
+        function togglePageSelection(pageNum) {
+            if (selectedPages.has(pageNum)) {
+                selectedPages.delete(pageNum);
+            } else {
+                selectedPages.add(pageNum);
+            }
+            
+            // Atualizar visual
+            const pageElement = document.querySelector(`[data-page="${pageNum}"]`);
+            if (pageElement) {
+                pageElement.classList.toggle('selected');
+            }
+            
+            // Atualizar contador
+            document.getElementById('selectedPages').textContent = selectedPages.size;
+        }
+        
+        // Split PDF
+        splitBtn.addEventListener('click', () => {
+            if (!currentPdfData) {
+                showAlert('Por favor, carregue um PDF primeiro.', 'warning');
+                return;
+            }
+            
+            if (selectedPages.size === currentPdfData.total_pages) {
+                showAlert('Não é possível dividir o PDF se todas as páginas forem excluídas.', 'warning');
+                return;
+            }
+            
+            loading.style.display = 'block';
+            
+            fetch('/split_pdf_process', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    method: 'selected',
+                    filename: currentPdfData.filename,
+                    excluded_pages: Array.from(selectedPages)
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                
+                if (data.success) {
+                    showAlert('PDF dividido com sucesso!', 'success');
+                    
+                    // Download each split file
+                    data.files.forEach((file, index) => {
+                        setTimeout(() => {
+                            const link = document.createElement('a');
+                            link.href = `/download_split/${file}`;
+                            link.download = file;
+                            link.click();
+                        }, index * 500);
+                    });
+                } else {
+                    showAlert(data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                showAlert('Erro ao dividir PDF: ' + error.message, 'danger');
+            });
+        });
+        
+        // Clear
+        clearBtn.addEventListener('click', () => {
+            currentPdfData = null;
+            selectedPages.clear();
+            pdfPreview.style.display = 'none';
+            uploadArea.style.display = 'block';
+            splitBtn.disabled = true;
+            showAlert('Arquivo limpo.', 'info');
+        });
+        
+        // Select All / Deselect All buttons
+        document.getElementById('selectAllBtn').addEventListener('click', () => {
+            selectedPages.clear();
+            displayPdfPages(currentPdfData.pages);
+            showAlert('Todas as páginas foram desmarcadas para exclusão.', 'info');
+        });
+        
+        document.getElementById('deselectAllBtn').addEventListener('click', () => {
+            selectedPages.clear();
+            displayPdfPages(currentPdfData.pages);
+            showAlert('Todas as páginas foram desmarcadas para exclusão.', 'info');
+        });
+        
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            alertContainer.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

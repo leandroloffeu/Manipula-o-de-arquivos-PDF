@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ferramentas PDF</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            margin: 20px auto;
+            padding: 30px;
+            max-width: 1200px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+        
+        .tool-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            border-color: #3498db;
+        }
+        
+        .tool-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .tool-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .tool-description {
+            color: #7f8c8d;
+            text-align: center;
+            line-height: 1.6;
+        }
+        
+        .signature-icon { color: #e74c3c; }
+        .split-icon { color: #f39c12; }
+        .merge-icon { color: #27ae60; }
+        .convert-icon { color: #9b59b6; }
+        
+        .btn-custom {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="main-container">
+            <!-- Header -->
+            <div class="header">
+                <h1><i class="fas fa-file-pdf"></i> Ferramentas PDF</h1>
+                <p>Escolha a ferramenta que deseja utilizar</p>
+            </div>
+            
+            <!-- Tools Grid -->
+            <div class="row">
+                <!-- Assinatura Digital -->
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="tool-card" onclick="navigateToTool('signature')">
+                        <div class="tool-icon signature-icon">
+                            <i class="fas fa-signature"></i>
+                        </div>
+                        <div class="tool-title">Assinatura Digital</div>
+                        <div class="tool-description">
+                            Adicione assinaturas digitais aos seus documentos PDF com posicionamento preciso
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Dividir PDF -->
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="tool-card" onclick="navigateToTool('split')">
+                        <div class="tool-icon split-icon">
+                            <i class="fas fa-cut"></i>
+                        </div>
+                        <div class="tool-title">Dividir PDF</div>
+                        <div class="tool-description">
+                            Divida um PDF em múltiplos arquivos menores por páginas ou intervalos
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Juntar PDF -->
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="tool-card" onclick="navigateToTool('merge')">
+                        <div class="tool-icon merge-icon">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <div class="tool-title">Juntar PDF</div>
+                        <div class="tool-description">
+                            Combine múltiplos arquivos PDF em um único documento
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Converter PDF para Word -->
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="tool-card" onclick="navigateToTool('convert')">
+                        <div class="tool-icon convert-icon">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                        <div class="tool-title">Converter PDF para Word</div>
+                        <div class="tool-description">
+                            Converta documentos PDF para formato Word (.docx) com opções avançadas
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="text-center mt-4">
+                <p class="text-muted">
+                    <i class="fas fa-info-circle"></i>
+                    Todas as ferramentas são seguras e processadas localmente
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function navigateToTool(tool) {
+            switch(tool) {
+                case 'signature':
+                    window.location.href = '/sign';
+                    break;
+                case 'split':
+                    window.location.href = '/split';
+                    break;
+                case 'merge':
+                    window.location.href = '/merge';
+                    break;
+                case 'convert':
+                    window.location.href = '/convert';
+                    break;
+            }
+        }
+    </script>
+</body>
+</html>

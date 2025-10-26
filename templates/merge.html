@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juntar PDF</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            margin: 20px auto;
+            padding: 30px;
+            max-width: 1000px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .upload-area {
+            border: 3px dashed #27ae60;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 30px;
+        }
+        
+        .upload-area:hover {
+            border-color: #229954;
+            background: #d5f4e6;
+        }
+        
+        .upload-area.dragover {
+            border-color: #229954;
+            background: #d5f4e6;
+            transform: scale(1.02);
+        }
+        
+        .btn-custom {
+            background: linear-gradient(45deg, #27ae60, #229954);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+            color: white;
+        }
+        
+        .btn-secondary-custom {
+            background: linear-gradient(45deg, #6c757d, #495057);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+            color: white;
+        }
+        
+        .file-list {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .file-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .file-item:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+        
+        .file-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .file-icon {
+            font-size: 1.5rem;
+            color: #dc3545;
+            margin-right: 15px;
+        }
+        
+        .file-details h6 {
+            margin: 0;
+            color: #2c3e50;
+        }
+        
+        .file-details small {
+            color: #6c757d;
+        }
+        
+        .file-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 0.875rem;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner-border {
+            color: #27ae60;
+        }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+        
+        .drag-handle {
+            cursor: move;
+            color: #6c757d;
+            margin-right: 10px;
+        }
+        
+        .drag-handle:hover {
+            color: #495057;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="main-container">
+            <!-- Header -->
+            <div class="header">
+                <h1><i class="fas fa-layer-group"></i> Juntar PDF</h1>
+                <p>Combine múltiplos arquivos PDF em um único documento</p>
+                <a href="/" class="btn btn-secondary-custom">
+                    <i class="fas fa-arrow-left"></i> Voltar ao Menu Principal
+                </a>
+            </div>
+            
+            <!-- Upload Area -->
+            <div class="upload-area" id="uploadArea">
+                <i class="fas fa-cloud-upload-alt fa-3x text-success mb-3"></i>
+                <h4>Arraste e solte seus PDFs aqui</h4>
+                <p class="text-muted">ou clique para selecionar múltiplos arquivos</p>
+                <input type="file" id="fileInput" accept=".pdf" multiple style="display: none;">
+            </div>
+            
+            <!-- Loading -->
+            <div class="loading" id="loading">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+                <p class="mt-2">Processando PDFs...</p>
+            </div>
+            
+            <!-- File List -->
+            <div id="fileList" style="display: none;">
+                <div class="file-list">
+                    <h5><i class="fas fa-list"></i> Arquivos Selecionados</h5>
+                    <div id="filesContainer">
+                        <!-- Files will be added here -->
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn btn-custom" id="mergeBtn" disabled>
+                            <i class="fas fa-layer-group"></i> Juntar PDFs
+                        </button>
+                        <button class="btn btn-secondary-custom" id="clearBtn">
+                            <i class="fas fa-eraser"></i> Limpar Todos
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Alerts -->
+            <div id="alertContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const loading = document.getElementById('loading');
+        const fileList = document.getElementById('fileList');
+        const filesContainer = document.getElementById('filesContainer');
+        const mergeBtn = document.getElementById('mergeBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        
+        let uploadedFiles = [];
+        
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files);
+            handleFiles(files);
+        });
+        
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                const files = Array.from(e.target.files);
+                handleFiles(files);
+            }
+        });
+        
+        function handleFiles(files) {
+            const pdfFiles = files.filter(file => file.type.includes('pdf'));
+            
+            if (pdfFiles.length === 0) {
+                showAlert('Por favor, selecione apenas arquivos PDF válidos.', 'danger');
+                return;
+            }
+            
+            if (pdfFiles.length !== files.length) {
+                showAlert(`${files.length - pdfFiles.length} arquivo(s) não PDF foram ignorados.`, 'warning');
+            }
+            
+            // Add files to the list
+            pdfFiles.forEach(file => {
+                const fileId = Date.now() + Math.random();
+                uploadedFiles.push({
+                    id: fileId,
+                    file: file,
+                    name: file.name,
+                    size: file.size
+                });
+            });
+            
+            displayFiles();
+            showAlert(`${pdfFiles.length} arquivo(s) PDF adicionado(s) com sucesso!`, 'success');
+        }
+        
+        function displayFiles() {
+            if (uploadedFiles.length === 0) {
+                fileList.style.display = 'none';
+                return;
+            }
+            
+            fileList.style.display = 'block';
+            filesContainer.innerHTML = '';
+            
+            uploadedFiles.forEach((fileObj, index) => {
+                const fileDiv = document.createElement('div');
+                fileDiv.className = 'file-item';
+                fileDiv.draggable = true;
+                fileDiv.dataset.index = index;
+                
+                fileDiv.innerHTML = `
+                    <div class="file-info">
+                        <i class="fas fa-grip-vertical drag-handle"></i>
+                        <i class="fas fa-file-pdf file-icon"></i>
+                        <div class="file-details">
+                            <h6>${fileObj.name}</h6>
+                            <small>${formatFileSize(fileObj.size)}</small>
+                        </div>
+                    </div>
+                    <div class="file-controls">
+                        <button class="btn btn-sm btn-outline-primary" onclick="moveUp(${index})" ${index === 0 ? 'disabled' : ''}>
+                            <i class="fas fa-arrow-up"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="moveDown(${index})" ${index === uploadedFiles.length - 1 ? 'disabled' : ''}>
+                            <i class="fas fa-arrow-down"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="removeFile(${index})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                
+                filesContainer.appendChild(fileDiv);
+            });
+            
+            mergeBtn.disabled = uploadedFiles.length < 2;
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        function removeFile(index) {
+            uploadedFiles.splice(index, 1);
+            displayFiles();
+            showAlert('Arquivo removido da lista.', 'info');
+        }
+        
+        function moveUp(index) {
+            if (index > 0) {
+                const temp = uploadedFiles[index];
+                uploadedFiles[index] = uploadedFiles[index - 1];
+                uploadedFiles[index - 1] = temp;
+                displayFiles();
+            }
+        }
+        
+        function moveDown(index) {
+            if (index < uploadedFiles.length - 1) {
+                const temp = uploadedFiles[index];
+                uploadedFiles[index] = uploadedFiles[index + 1];
+                uploadedFiles[index + 1] = temp;
+                displayFiles();
+            }
+        }
+        
+        // Merge PDFs
+        mergeBtn.addEventListener('click', () => {
+            if (uploadedFiles.length < 2) {
+                showAlert('É necessário pelo menos 2 arquivos PDF para juntar.', 'warning');
+                return;
+            }
+            
+            loading.style.display = 'block';
+            
+            const formData = new FormData();
+            uploadedFiles.forEach((fileObj, index) => {
+                formData.append('files', fileObj.file);
+            });
+            
+            fetch('/merge_pdf', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                
+                if (data.success) {
+                    showAlert('PDFs juntados com sucesso!', 'success');
+                    
+                    // Download the merged file
+                    const link = document.createElement('a');
+                    link.href = `/download_merge/${data.filename}`;
+                    link.download = data.filename;
+                    link.click();
+                } else {
+                    showAlert(data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                showAlert('Erro ao juntar PDFs: ' + error.message, 'danger');
+            });
+        });
+        
+        // Clear
+        clearBtn.addEventListener('click', () => {
+            uploadedFiles = [];
+            displayFiles();
+            showAlert('Todos os arquivos foram removidos.', 'info');
+        });
+        
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            alertContainer.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
